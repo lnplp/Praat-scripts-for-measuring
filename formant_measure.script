@@ -1,0 +1,145 @@
+########################################################################################################
+##  Adapted from a script by Katherine Crosswhite. 
+##
+##  The script measures the first three formants at 0, 25, 50, 75 and 100% of a given interval on a 
+##  given tier. The results are printed to a text file in the directory holding the sound files.
+##  To run the script, sound files and textgrids must be in the same directory. You need to make sure
+##  that the intervals you want to measure are on the same tier in all textgrids. 
+##
+##  This script can be adapted to take measurements over multiple intervals: if label$ <> "" would
+##  take measurements over all intervals. But the script places these measurements on separate rows, not 
+##  in separate columns for each sound file. This is a bit of a pain to rectify, so if you want to measure 
+##  more than one interval, it's most efficient to run the script for each interval separately and then
+##  copy the resulting measurement columns into a single spreadsheet. Similarly, it's most efficient to
+##  run the script separately for each speaker (so have separate directories for your speakers) and then
+##  copy the results into a single spreadsheet with an added Speaker column.
+##
+##  The script brings up a form in which you specify the directory holding the sound files, the sound
+##  file extension, the speaker's gender (slightly different formant tracking settings are used for 
+##  males and females) and the interval you want to measure over. The script should not need any editing
+##  beyond entering these bits of information.
+##
+##  Leendert Plug, last edited August 2016
+########################################################################################################
+
+form Directory and sound file extension
+   comment Specify the directory the script should run on by replacing '...' by the full path. Keep the final slash. 
+   sentence Directory ...\
+   comment Edit the file extension if your sound files are not .wav.
+   sentence Extension .wav
+   comment Edit the speaker's gender (m or f only)
+   sentence Gender m
+   comment Edit the label of the interval you want to measure over.
+   sentence Interval V
+endform
+
+##  The next bit deletes a previous version of the output file. 
+
+filedelete 'directory$'F1-F3quarts.txt
+
+##  The next bit makes the header in the log file: it creates a variable called "header_row$", 
+##  then writes that variable to the log file. Make sure this matches the analysis output
+##  specified below.
+
+header_row$ = "Filename 'tab$' Segment 'tab$' F1on 'tab$' F2on 'tab$' F3on 'tab$' F1qu 'tab$' F2qu 'tab$' F3qu 'tab$' F1mid 'tab$' F2mid 'tab$' F3mid 'tab$' F1thrqu 'tab$' F2thrqu 'tab$' F3thrqu 'tab$' F1off 'tab$' F2off 'tab$' F3off 'newline$'"
+header_row$ > 'directory$'F1-F3quarts.txt
+
+##  The next bit makes a list of all the sound files in the directory, and puts the number of
+##  filenames into the variable "number_of_files".
+
+Create Strings as file list...  list 'directory$'*'extension$'
+number_files = Get number of strings
+
+## The next bit sets up a "for" loop that will iterate once for every file in the list.
+
+for j from 1 to number_files
+
+## The next bit queries the file-list to get the first filename from it and reads that file in.
+
+     select Strings list
+     current_token$ = Get string... 'j'
+     Read from file... 'directory$''current_token$'
+
+## The next bit makes a variable called "object_name$" that will be equal to the filename minus 
+## the ".aiff" extension.
+
+     object_name$ = selected$ ("Sound")
+
+## The next bit does a formant analysis on the current sound file.  Note that we first have to re-select the sound
+## object.  We then use an if statement to make sure that we use a maximum frequency of
+## 5500 for female speakers and 5000 for male speakers.  
+
+     if gender$ = "f"
+          To Formant (burg)... 0.0025 5 5500 0.025 50
+          else
+          To Formant (burg)... 0.0025 5 5000 0.025 50
+     endif
+
+## The next bit gets the corresponding TextGrid and reads it in:
+
+     Read from file... 'directory$''object_name$'.TextGrid
+
+## The next bit queries the TextGrid to find out how many intervals there are on a specified tier (here 2), 
+## storing that number in a variable called "number_of_intervals". This is used to set up a "for" loop
+## that will go through each of the intervals and measure it. You can do this for every interval that 
+## has a non-null label (the disabled line) or for an interval with a specific label (here "V").
+
+
+     select TextGrid 'object_name$'
+     number_of_intervals = Get number of intervals... 1
+     for b from 1 to number_of_intervals
+         select TextGrid 'object_name$'
+          label$ = Get label of interval... 1 'b'
+ 
+           if label$ = interval$
+ 
+## The next bit does the actual measurements and any subsequent calculations.
+## Here you specify the points at which you want to measure and then
+## go back to the formant analysis done earlier and extract whatever you want at these points.
+
+               begin_vowel = Get starting point... 1 'b'
+               end_vowel = Get end point... 1 'b'
+               quartpoint = begin_vowel + ((end_vowel - begin_vowel) / 4)
+               midpoint = begin_vowel + ((end_vowel - begin_vowel) / 2)
+               threequartpoint = begin_vowel + (3 * ((end_vowel - begin_vowel) / 4))
+               select Formant 'object_name$'
+               f_one_a = Get value at time... 1 'begin_vowel' Hertz Linear
+               f_two_a = Get value at time... 2 'begin_vowel' Hertz Linear
+               f_three_a = Get value at time... 3 'begin_vowel' Hertz Linear
+               f_one_b = Get value at time... 1 'quartpoint' Hertz Linear
+               f_two_b = Get value at time... 2 'quartpoint' Hertz Linear
+               f_three_b = Get value at time... 3 'quartpoint' Hertz Linear
+               f_one_c = Get value at time... 1 'midpoint' Hertz Linear
+               f_two_c = Get value at time... 2 'midpoint' Hertz Linear
+               f_three_c = Get value at time... 3 'midpoint' Hertz Linear
+               f_one_d = Get value at time... 1 'threequartpoint' Hertz Linear
+               f_two_d = Get value at time... 2 'threequartpoint' Hertz Linear
+               f_three_d = Get value at time... 3 'threequartpoint' Hertz Linear
+               f_one_e = Get value at time... 1 'end_vowel' Hertz Linear
+               f_two_e = Get value at time... 2 'end_vowel' Hertz Linear
+               f_three_e = Get value at time... 3 'end_vowel' Hertz Linear
+
+## Once all the measurements have been done, the results should be appended to the output file the script
+## has created. Make sure that the orders of the values and the headers match.
+
+fileappend "'directory$'F1-F3quarts.txt" 'object_name$''tab$''label$''tab$''f_one_a:0''tab$''f_two_a:0''tab$''f_three_a:0''tab$''f_one_b:0''tab$''f_two_b:0''tab$''f_three_b:0''tab$''f_one_c:0''tab$''f_two_c:0''tab$''f_three_c:0''tab$''f_one_d:0''tab$''f_two_d:0''tab$''f_three_d:0''tab$''f_one_e:0''tab$''f_two_e:0''tab$''f_three_e:0''newline$'
+ 
+         endif
+     endfor
+
+## The next bit makes sure the analysis is repeated for each file in the list, removes objects 
+## after each analysis, and finally ends the for loop. 
+
+     select all
+     minus Strings list
+     Remove
+endfor
+
+## And at the end, a little bit of clean up and a message to let you know that it's all done.
+
+select all
+Remove
+clearinfo
+print Done.
+
+## end of script

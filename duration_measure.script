@@ -1,0 +1,101 @@
+
+########################################################################################################
+##  Adapted from a script by Katherine Crosswhite.
+##
+##  The script measures the duration of a given interval on a given tier. The results are 
+##  printed to a text file in the directory holding the sound files.
+##
+##  To run the script, sound files and textgrids must be in the same directory. You need to make sure
+##  that the intervals you want to measure are on the same tier in all textgrids. 
+##
+##  Leendert Plug, July 2003
+########################################################################################################
+
+form Directory and sound file extension
+   comment Specify the directory the script should run on by replacing '...' by the full path. Keep the final slash. 
+   sentence Directory ...\
+   comment Edit the file extension if your sound files are not .wav.
+   sentence Extension .wav
+   comment Edit the label of the interval you want to measure over.
+   sentence Interval V
+endform
+
+##  The next bit deletes a previous version of the output file. 
+
+##  filedelete 'directory$'intv-duration.txt
+
+##  The next bit makes the header in the output file: it creates a variable called "header_row$", 
+##  then writes that variable to the output file. Make sure this matches the analysis output
+##  specified below.
+
+header_row$ = "Filename 'tab$' Segment 'tab$' Duration 'newline$'"
+header_row$ > 'directory$'intv-duration.txt
+
+##  The next bit makes a list of all the sound files in the directory, and puts the number of
+##  filenames into the variable "number_of_files".
+
+Create Strings as file list...  list 'directory$'*.wav
+number_files = Get number of strings
+
+## The next bit sets up a "for" loop that will iterate once for every file in the list.
+
+for j from 1 to number_files
+
+## The next bit queries the file-list to get the first filename from it and reads that file in.
+
+     select Strings list
+     current_token$ = Get string... 'j'
+     Read from file... 'directory$''current_token$'
+
+## The next bit makes a variable called "object_name$" that will be equal to the filename minus 
+## the ".aiff" extension.
+
+     object_name$ = selected$ ("Sound")
+
+## The next bit gets the corresponding TextGrid and reads it in.
+
+     Read from file... 'directory$''object_name$'.TextGrid
+
+## The next bit queries the TextGrid to find out how many intervals there are on a specified tier (here 1), 
+## storing that number in a variable called "number_of_intervals". This is used to set up a "for" loop
+## that will go through each of the intervals and measure it. You can do this for every interval that 
+## has a non-null label (the first line) or for an interval with a specific label (here "V", second line).
+
+     select TextGrid 'object_name$'
+     number_of_intervals = Get number of intervals... 1
+     for b from 1 to number_of_intervals
+         select TextGrid 'object_name$'
+          label$ = Get label of interval... 1 'b'
+ 
+          if label$ = interval$
+ 
+## The next bit does the actual measurements and any subsequent calculations.
+
+               begin_vowel = Get starting point... 1 'b'
+               end_vowel = Get end point... 1 'b'
+               duration = (end_vowel - begin_vowel) * 1000
+
+## Once all the measurements have been done, the results should be appended to the output file the script
+## has created. 
+
+            fileappend "'directory$'intv-duration.txt" 'object_name$''tab$''label$''tab$''duration:3''newline$'
+ 
+         endif
+     endfor
+
+## The next bit makes sure the analysis is repeated for each file in the list, removes objects 
+## after each analysis, and finally ends the "for" loop. 
+
+     select all
+     minus Strings list
+     Remove
+endfor
+
+## The next bit tidies up and prints a final message.
+
+select all
+Remove
+clearinfo
+print All done.
+
+## end of script
