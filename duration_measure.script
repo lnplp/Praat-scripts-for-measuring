@@ -1,14 +1,12 @@
-
 ########################################################################################################
-##  Adapted from a script by Katherine Crosswhite.
+##  
+##  The script measures the duration (in msec) of a user-specified interval on a user-specified tier, 
+##  looping through a user-specified directory. The results are printed to a text file named 
+##  'label_tier_duration' in the same directory.
 ##
-##  The script measures the duration of a given interval on a given tier. The results are 
-##  printed to a text file in the directory holding the sound files.
+##  Original script by Katherine Crosswhite, adapted by Leendert Plug.
+##  Last edited July 2018
 ##
-##  To run the script, sound files and textgrids must be in the same directory. You need to make sure
-##  that the intervals you want to measure are on the same tier in all textgrids. 
-##
-##  Leendert Plug, July 2003
 ########################################################################################################
 
 form Directory and sound file extension
@@ -16,20 +14,22 @@ form Directory and sound file extension
    sentence Directory ...\
    comment Edit the file extension if your sound files are not .wav.
    sentence Extension .wav
-   comment Edit the label of the interval you want to measure over.
-   sentence Interval V
+   comment Specify the label of the interval you want to measure over.
+   sentence Interval ICI
+   comment Specify the number of the tier this interval is on.
+   positive tiernumber 1
 endform
 
 ##  The next bit deletes a previous version of the output file. 
 
-##  filedelete 'directory$'intv-duration.txt
+filedelete 'directory$''interval$'_'tiernumber'_duration.txt
 
 ##  The next bit makes the header in the output file: it creates a variable called "header_row$", 
 ##  then writes that variable to the output file. Make sure this matches the analysis output
 ##  specified below.
 
 header_row$ = "Filename 'tab$' Segment 'tab$' Duration 'newline$'"
-header_row$ > 'directory$'intv-duration.txt
+header_row$ > 'directory$''interval$'_'tiernumber'_duration.txt
 
 ##  The next bit makes a list of all the sound files in the directory, and puts the number of
 ##  filenames into the variable "number_of_files".
@@ -56,29 +56,28 @@ for j from 1 to number_files
 
      Read from file... 'directory$''object_name$'.TextGrid
 
-## The next bit queries the TextGrid to find out how many intervals there are on a specified tier (here 1), 
+## The next bit queries the TextGrid to find out how many intervals there are on the user-specified tier, 
 ## storing that number in a variable called "number_of_intervals". This is used to set up a "for" loop
-## that will go through each of the intervals and measure it. You can do this for every interval that 
-## has a non-null label (the first line) or for an interval with a specific label (here "V", second line).
+## that will go through each of the intervals and measure it. 
 
      select TextGrid 'object_name$'
-     number_of_intervals = Get number of intervals... 1
+     number_of_intervals = Get number of intervals... tiernumber
      for b from 1 to number_of_intervals
          select TextGrid 'object_name$'
-          label$ = Get label of interval... 1 'b'
+          label$ = Get label of interval... tiernumber 'b'
  
           if label$ = interval$
  
 ## The next bit does the actual measurements and any subsequent calculations.
 
-               begin_vowel = Get starting point... 1 'b'
-               end_vowel = Get end point... 1 'b'
+               begin_vowel = Get starting point... tiernumber 'b'
+               end_vowel = Get end point... tiernumber 'b'
                duration = (end_vowel - begin_vowel) * 1000
 
 ## Once all the measurements have been done, the results should be appended to the output file the script
 ## has created. 
 
-            fileappend "'directory$'intv-duration.txt" 'object_name$''tab$''label$''tab$''duration:3''newline$'
+            fileappend "'directory$''interval$'_'tiernumber'_duration.txt" 'object_name$''tab$''label$''tab$''duration:3''newline$'
  
          endif
      endfor
