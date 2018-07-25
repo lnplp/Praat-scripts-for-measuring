@@ -1,7 +1,5 @@
 ########################################################################################################
-##  Adapted from a script by Katherine Crosswhite. 
-##
-##  The script measures the first three formants at 0, 25, 50, 75 and 100% of a given interval on a 
+##  This script measures the first three formants at 0, 25, 50, 75 and 100% of a given interval on a 
 ##  given tier. The results are printed to a text file in the directory holding the sound files.
 ##  To run the script, sound files and textgrids must be in the same directory. You need to make sure
 ##  that the intervals you want to measure are on the same tier in all textgrids. 
@@ -11,7 +9,8 @@
 ##  males and females) and the interval you want to measure over. The script should not need any editing
 ##  beyond entering these bits of information.
 ##
-##  Leendert Plug, last edited August 2016
+##  Original script by Katharine Crosswhite, adapted by Leendert Plug
+##  Last edited July 2018
 ########################################################################################################
 
 form Directory and sound file extension
