@@ -13,10 +13,10 @@
 
 form Directory and sound file extension
    comment Specify the directory the script should run on by replacing '...' by the full path. Keep the final slash. 
-   sentence Directory C:\Users\leend\Desktop\0774_107280_Leendert-Plug_Speech-Tempo-Experiments\Experiment1\8_Glasgowrecordings_27Oct\chunked\rec1-chunks\exp\
+   sentence Directory ...\
    comment Edit the file extension if your sound files are not .wav.
    sentence Extension .wav
-   comment Edit the label of the interval you want to measure over.
+   comment Specify the label of the interval you want to measure over.
    sentence Interval V
    comment Specify the number of the tier this interval is on.
    positive tiernumber 1
@@ -26,7 +26,7 @@ form Directory and sound file extension
 	positive Maximum_pitch_(Hz) 300
 endform
 
-##  The next bit deletes a previous version of the output file. 
+##  The next bit deletes a previous version of the output file, if it exists.
 
 filedelete 'directory$''interval$'_'tiernumber'_pitch_duration.txt
 
