@@ -1,7 +1,14 @@
-## Same as duration and formant measurement scripts, but measures duration, pitch minimum, maximum, mean
-## and range for selected interval. Form allows for pitch floor and ceiling to be set.
+########################################################################################################
+##  
+##  This script measures the duration (in msec) and F0 minimum, maximum, mean and range of a 
+##  user-specified interval on a user-specified tier, looping through a user-specified directory. 
+##  Pitch analysis time step, floor and ceiling values are user-specified. 
+##  The results are printed to a text file named 'label_tier_pitch_duration' in the same directory.
 ##
-## Leendert Plug, October 2016
+##  Original script by Katherine Crosswhite, adapted by Leendert Plug.
+##  Last edited July 2018
+##
+########################################################################################################
 
 
 form Directory and sound file extension
@@ -11,18 +18,24 @@ form Directory and sound file extension
    sentence Extension .wav
    comment Edit the label of the interval you want to measure over.
    sentence Interval V
+   comment Specify the number of the tier this interval is on.
+   positive tiernumber 1
 	comment Pitch analysis parameters
 	positive Pitch_time_step 0.01
 	positive Minimum_pitch_(Hz) 95
 	positive Maximum_pitch_(Hz) 300
 endform
 
+##  The next bit deletes a previous version of the output file. 
+
+filedelete 'directory$''interval$'_'tiernumber'_pitch_duration.txt
+
 ##  The next bit makes the header in the output file: it creates a variable called "header_row$", 
 ##  then writes that variable to the output file. Make sure this matches the analysis output
 ##  specified below.
 
 header_row$ = "Filename 'tab$' Segment 'tab$' Duration 'tab$' Pitchmin 'tab$' Pitchmax 'tab$' Pitchmean 'tab$' Pitchrange 'newline$'"
-header_row$ > 'directory$'pitch.txt
+header_row$ > 'directory$''interval$'_'tiernumber'_pitch_duration.txt
 
 ##  The next bit makes a list of all the sound files in the directory, and puts the number of
 ##  filenames into the variable "number_of_files".
@@ -52,23 +65,23 @@ for j from 1 to number_files
      select Sound 'object_name$'
      To Pitch... pitch_time_step minimum_pitch maximum_pitch
 
-## The next bit queries the TextGrid to find out how many intervals there are on a specified tier (here 1), 
+## The next bit queries the TextGrid to find out how many intervals there are on the user-specified tier, 
 ## storing that number in a variable called "number_of_intervals". This is used to set up a "for" loop
 ## that will go through each of the intervals and measure it. You can do this for every interval that 
 ## has a non-null label (the first line) or for an interval with a specific label (here "V", second line).
 
      select TextGrid 'object_name$'
-     number_of_intervals = Get number of intervals... 1
+     number_of_intervals = Get number of intervals... tiernumber
      for b from 1 to number_of_intervals
          select TextGrid 'object_name$'
-          label$ = Get label of interval... 1 'b'
+          label$ = Get label of interval... tiernumber 'b'
  
           if label$ = interval$
  
 ## The next bit does the actual measurements and any subsequent calculations.
 
-        start = Get starting point... 1 'b'
-        end = Get end point... 1 'b'
+        start = Get starting point... tiernumber 'b'
+        end = Get end point... tiernumber 'b'
         dur = (end - start) * 1000
 
         select Pitch 'object_name$'
@@ -80,7 +93,7 @@ for j from 1 to number_files
 ## Once all the measurements have been done, the results should be appended to the output file the script
 ## has created. 
 
-            fileappend "'directory$'pitch.txt" 'object_name$''tab$''label$''tab$''dur''tab$''pitchmin''tab$''pitchmax''tab$''pitchmean''tab$''pitchrange''newline$'
+            fileappend "'directory$''interval$'_'tiernumber'_pitch_duration.txt" 'object_name$''tab$''label$''tab$''dur''tab$''pitchmin''tab$''pitchmax''tab$''pitchmean''tab$''pitchrange''newline$'
  
          endif
      endfor
