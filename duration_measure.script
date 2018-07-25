@@ -1,12 +1,10 @@
 ########################################################################################################
-##  
-##  The script measures the duration (in msec) of a user-specified interval on a user-specified tier, 
+##  This script measures the duration (in msec) of a user-specified interval on a user-specified tier, 
 ##  looping through a user-specified directory. The results are printed to a text file named 
 ##  'label_tier_duration' in the same directory.
 ##
-##  Original script by Katherine Crosswhite, adapted by Leendert Plug.
+##  Original script by Katherine Crosswhite, adapted by Leendert Plug
 ##  Last edited July 2018
-##
 ########################################################################################################
 
 form Directory and sound file extension
