@@ -1,18 +1,28 @@
-##  Adapted formant measurement script to do CoG measurements. 
+###############################################################################################################
+##  Adapted formant measurement script to do CoG and RMS measurements. 
 ##  Selects 25% chunks of segment 'burst', computes a spectrum over each and takes a CoG measure.
-##  Trial and error to get values comparable to those of Plug & Ogden; current settings pass Hann 
-##  band 1500-5000 to do measurement over 1500-5000 frequency range rather than complete spectrum, 
-##  Power setting 1. Option for LPC smoothing available.
+##  First used to replicate analysis in Plug & Ogden (2003); settings pass Hann 
+##  band 1500-5000 to do measurement over 1500-5000 frequency range rather than complete spectrum.
+##  Power setting 1. 
+##
 ##  To run the script, sound files and textgrids must be in the same directory. You need to make sure
 ##  that the intervals you want to measure are on the same tier in all textgrids. 
 ##
-##  Leendert Plug, February 2009
+##  Leendert Plug, February 2019
+###############################################################################################################
 
 
+ form Directory and sound file extension
+   comment Specify the directory the script should run on by replacing '...' by the full path. Keep the final slash. 
+   sentence Directory ...\
+   comment Edit the file extension if your sound files are not .wav.
+   sentence Extension .wav
+   comment Specify the label of the interval you want to measure over.
+   sentence Interval burst
+   comment Specify the number of the tier this interval is on.
+   positive tiernumber 1
+endform
 
-##  The next bit specifies the directory containing the sound files.
-
-directory$ = "D:\Dutch r\Data\Speaker A\"
 
 ##  The next bit deletes a previous version of the output file. 
 
@@ -22,13 +32,13 @@ filedelete 'directory$'CoG.txt
 ##  then writes that variable to the log file. Make sure this matches the analysis output
 ##  specified below.
 
-header_row$ = "Filename 'tab$' Segment 'tab$' CoG1 'tab$' CoG2 'tab$' CoG3 'tab$' CoG4 'newline$'"
+header_row$ = "Filename 'tab$' Segment 'tab$' CoG1 'tab$' CoG2 'tab$' CoG3 'tab$' CoG4 'tab$' rms1 'tab$' rms2 'tab$' rms3 'tab$' rms4 'newline$'"
 header_row$ > 'directory$'CoG.txt
 
 ##  The next bit makes a list of all the sound files in the directory, and puts the number of
 ##  filenames into the variable "number_of_files".
 
-Create Strings as file list...  list 'directory$'*.wav
+Create Strings as file list...  list 'directory$'*'extension$'
 number_files = Get number of strings
 
 ## The next bit sets up a "for" loop that will iterate once for every file in the list.
@@ -42,7 +52,7 @@ for j from 1 to number_files
      Read from file... 'directory$''current_token$'
 
 ## The next bit makes a variable called "object_name$" that will be equal to the filename minus 
-## the ".aiff" extension.
+## the extension.
 
      object_name$ = selected$ ("Sound")
 
@@ -56,24 +66,31 @@ for j from 1 to number_files
 ## has a non-null label (the disabled line) or for an interval with a specific label (here "bu").
 
      select TextGrid 'object_name$'
-     number_of_intervals = Get number of intervals... 1
+     number_of_intervals = Get number of intervals... tiernumber
      for b from 1 to number_of_intervals
          select TextGrid 'object_name$'
-          interval_label$ = Get label of interval... 1 'b'
+          interval_label$ = Get label of interval... tiernumber 'b'
  
-##         if interval_label$ <> ""
-           if interval_label$ = "bu"
+           if interval_label$ = interval$
  
 ## The next bit does the actual measurements and any subsequent calculations.
 ## Here you specify the points at which you want to measure.
 
-               begin_bu = Get starting point... 1 'b'
-               end_bu = Get end point... 1 'b'
+               begin_bu = Get starting point... tiernumber 'b'
+               end_bu = Get end point... tiernumber 'b'
                quartpoint = begin_bu + ((end_bu - begin_bu) / 4)
                midpoint = begin_bu + ((end_bu - begin_bu) / 2)
                threequartpoint = begin_bu + (3 * ((end_bu - begin_bu) / 4))
 
-## This is the first run.
+## This gets the RMS amplitude measures.
+
+         select Sound 'object_name$'
+         rms1 = Get root-mean-square... begin_bu quartpoint
+	 rms2 = Get root-mean-square... quartpoint midpoint
+	 rms3 = Get root-mean-square... midpoint threequartpoint
+         rms4 = Get root-mean-square... threequartpoint end_bu
+
+## This is the first run to get the CoG measures.
 
         select Sound 'object_name$'
         plus TextGrid 'object_name$'
@@ -91,12 +108,7 @@ for j from 1 to number_files
         select Spectrum untitled
         Filter (pass Hann band)... 1500 5000 100
         Edit
-        cog1 = Get centre of gravity... 1
-
-##      select Spectrum untitled
-##      LPC smoothing... 5 50
-##      Edit
-##      cog = Get centre of gravity... 1
+        cog1 = Get centre of gravity... tiernumber
 
         # remove spectrum and tmp sound file
         Remove
@@ -121,12 +133,7 @@ for j from 1 to number_files
         select Spectrum untitled
         Filter (pass Hann band)... 1500 5000 100
         Edit
-        cog2 = Get centre of gravity... 1
-
-##      select Spectrum untitled
-##      LPC smoothing... 5 50
-##      Edit
-##      cog = Get centre of gravity... 1
+        cog2 = Get centre of gravity... tiernumber
 
         # remove spectrum and tmp sound file
         Remove
@@ -152,12 +159,7 @@ for j from 1 to number_files
         select Spectrum untitled
         Filter (pass Hann band)... 1500 5000 100
         Edit
-        cog3 = Get centre of gravity... 1
-
-##      select Spectrum untitled
-##      LPC smoothing... 5 50
-##      Edit
-##      cog = Get centre of gravity... 1
+        cog3 = Get centre of gravity... tiernumber
 
         # remove spectrum and tmp sound file
         Remove
@@ -182,12 +184,7 @@ for j from 1 to number_files
         select Spectrum untitled
         Filter (pass Hann band)... 1500 5000 100
         Edit
-        cog4 = Get centre of gravity... 1
-
-##      select Spectrum untitled
-##      LPC smoothing... 5 50
-##      Edit
-##      cog = Get centre of gravity... 1
+        cog4 = Get centre of gravity... tiernumber
 
         # remove spectrum and tmp sound file
         Remove
@@ -199,7 +196,7 @@ for j from 1 to number_files
 ## Once all the measurements have been done, the results should be appended to the output file the script
 ## has created. Make sure that the orders of the values and the headers match.
 
-fileappend "'directory$'CoG.txt" 'object_name$''tab$''interval_label$''tab$''cog1''tab$''cog2''tab$''cog3''tab$''cog4''newline$'
+fileappend "'directory$'CoG.txt" 'object_name$''tab$''interval_label$''tab$''cog1''tab$''cog2''tab$''cog3''tab$''cog4''tab$''rms1''tab$''rms2''tab$''rms3''tab$''rms4''newline$'
  
          endif
      endfor
