@@ -1,7 +1,7 @@
 # Praat-scripts-for-measuring
 Open each script to see basic instructions for use, and attribution. These scripts come with no guarantee of functionality.
 
-**cog_measure.script** measures spectral centre of gravity over portions of a given textgrid interval. It goes through a given directory and writes the results to a .txt file in the same directory. 
+**cog_rms_measure.script** measures spectral centre of gravity and RMS amplitude over portions of a given textgrid interval. It goes through a given directory and writes the results to a .txt file in the same directory. 
 
 **duration_measure.script** measures durations of textgrid intervals. It goes through a given directory and writes the results to a .txt file in the same directory. 
 
