@@ -11,6 +11,4 @@ Open each script to see basic instructions for use, and attribution. These scrip
 
 **pitch_duration_measure.script** takes several pitch measurements over given textgrid intervals, along with interval durations. It goes through a given directory and writes the results to a .txt file in the same directory. 
 
-**rms_measure.script** measures root-mean-square amplitude over a given textgrid interval or intervals. It goes through a given directory and writes the results to a .txt file in the same directory. 
-
-**vowel_acoustics.script** measures duration, formants, spectral moments and F0 dynamically over a given textgrid interval. It goes through a given directory and writes the results to a .txt file in the same directory.
+**vowel_acoustics.script** measures duration, formants, spectral moments and F0 over a given textgrid interval. It goes through a given directory and writes the results to a .txt file in the same directory.
