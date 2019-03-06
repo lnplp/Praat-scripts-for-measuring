@@ -64,8 +64,11 @@ for j from 1 to number_files
          select TextGrid 'object_name$'
           label$ = Get label of interval... tiernumber 'b'
  
+## if you want to measure any labelled interval on the selected tier, replace the following line by
+## [if label$ <> ""] (without the square brackets). The following line takes the label from the form.
+
           if label$ = interval$
- 
+          
 ## The next bit does the actual measurements and any subsequent calculations.
 
                begin_vowel = Get starting point... tiernumber 'b'
