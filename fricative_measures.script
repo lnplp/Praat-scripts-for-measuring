@@ -1,0 +1,143 @@
+###############################################################################################################
+##  This script takes a duration, CoG and RMS amplitude measurement over a specified 
+##  segment -- good for analysis of fricatives.
+##    
+##  The user can specify the upper threshold of a low-pass Hann filter for CoG. 
+##  By default the threshold is 1500Hz, so CoG is calculated only over the 
+##  frequency range 1500-5000. This is to minimise the impact of formant resonances
+##  from surrounding vowels. For distinguishing alveolars from other fricatives, 
+##  apical vs laminal alveolars and so on most of the crucial information will be in 
+##  the top half of the spectrum.
+##
+##  The CoG power setting is 1. 
+##
+##  To run the script, sound files and textgrids must be in the same directory. You 
+##  need to make sure that the intervals you want to measure are on the same tier 
+##  in all textgrids. When you run the script, a form will pop up in which
+##  you need to enter the directory you are working in and related specifics. 
+##  You do not need to edit the script itself to run it successfully. 
+##
+##  Leendert Plug, March 2020
+###############################################################################################################
+
+form Directory and sound file extension
+   comment Specify the directory the script should run on by replacing '...' by the full path. Keep the final slash. 
+   sentence Directory ...\
+   comment Edit the file extension if your sound files are not .wav.
+   sentence Extension .wav
+   comment Specify the label of the interval you want to measure over.
+   sentence Interval fric
+   comment Specify the number of the tier this interval is on.
+   positive tiernumber 1
+   comment Specify the low-pass filter threshold.
+   positive lowpass 1500
+endform
+
+##  The next bit deletes a previous version of the output file. 
+
+filedelete 'directory$'CoG_results.txt
+
+##  The next bit makes the header in the log file: it creates a variable called "header_row$", 
+##  then writes that variable to the log file. Make sure this matches the analysis output
+##  specified below.
+
+header_row$ = "Filename 'tab$' Segment 'tab$' Duration 'tab$' CoG 'tab$' RMS 'newline$'"
+header_row$ > 'directory$'CoG_results.txt
+
+##  The next bit makes a list of all the sound files in the directory, and puts the number of
+##  filenames into the variable "number_of_files".
+
+Create Strings as file list...  list 'directory$'*'extension$'
+number_files = Get number of strings
+
+## The next bit sets up a "for" loop that will iterate once for every file in the list.
+
+for j from 1 to number_files
+
+## The next bit queries the file-list to get the first filename from it and reads that file in.
+
+     select Strings list
+     current_token$ = Get string... 'j'
+     Read from file... 'directory$''current_token$'
+
+## The next bit makes a variable called "object_name$" that will be equal to the filename minus 
+## the extension.
+
+     object_name$ = selected$ ("Sound")
+
+## The next bit gets the corresponding TextGrid and reads it in:
+
+     Read from file... 'directory$''object_name$'.TextGrid
+
+## The next bit queries the TextGrid to find out how many intervals there are on a specified tier (here 1), 
+## storing that number in a variable called "number_of_intervals". This is used to set up a "for" loop
+## that will go through each of the intervals and measure it.
+
+     select TextGrid 'object_name$'
+     number_of_intervals = Get number of intervals... tiernumber
+     for b from 1 to number_of_intervals
+         select TextGrid 'object_name$'
+          interval_label$ = Get label of interval... tiernumber 'b'
+ 
+           if interval_label$ = interval$
+ 
+## The next bit does the actual measurements and any subsequent calculations.
+
+	   begin_seg = Get starting point... tiernumber 'b'
+           end_seg = Get end point... tiernumber 'b'
+
+## This gets the duration and RMS amplitude measures.
+
+         select Sound 'object_name$'
+         duration = (end_seg - begin_seg) * 1000
+         rms = Get root-mean-square... begin_seg end_seg
+
+## This gets the CoG measures.
+
+        select Sound 'object_name$'
+        plus TextGrid 'object_name$'
+        Edit
+
+        editor TextGrid 'object_name$'
+        Select... 'begin_seg' 'end_seg'
+        Extract sound selection (time from 0)
+        Close
+        endeditor
+
+        select Sound untitled
+        To Spectrum... yes
+
+        select Spectrum untitled
+        Filter (pass Hann band)... lowpass 5000 100
+        Edit
+        cog = Get centre of gravity... tiernumber
+
+        # remove spectrum and tmp sound file
+        Remove
+        select Sound untitled
+        Remove
+
+## Once all the measurements have been done, the results should be appended to the output file the script
+## has created. Make sure that the orders of the values and the headers match.
+
+fileappend "'directory$'CoG_results.txt" 'object_name$''tab$''interval_label$''tab$''duration''tab$''cog''tab$''rms''newline$'
+ 
+         endif
+     endfor
+
+## The next bit makes sure the analysis is repeated for each file in the list, removes objects 
+## after each analysis, and finally ends the for loop. 
+
+     select all
+     minus Strings list
+     Remove
+endfor
+
+## And at the end, a little bit of clean up and a message to let you know that it's all done.
+
+select all
+Remove
+clearinfo
+print Done.
+
+## end of script
